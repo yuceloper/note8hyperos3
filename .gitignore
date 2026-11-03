@@ -1,0 +1,25 @@
+# Local ROM inputs and outputs
+/donor/
+/extracted/
+/unpacked/
+/out/
+/logs/
+/backups/
+*.img
+*.new.dat
+*.new.dat.br
+*.patch.dat
+*.capex
+*.apex
+*.apk
+*.so
+*.zip
+*.tar.gz
+# Private keys and local credentials
+.env
+.env.*
+*.pem
+*.key
+adbkey*
+.DS_Store
+__pycache__/
