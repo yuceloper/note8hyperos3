@@ -1,0 +1,15 @@
+{
+  "result": "PASS",
+  "source_sha256": "0b2ffd2e0ae31e3907b07f9060eb3284b611f27a44d7aa5bcdf72ac0de0192b3",
+  "candidate_sha256": "c03f761417871e9b14102cf49669bff8bd60c12715b26b8b9a617cb8e3d6675a",
+  "checks": [
+    "pinned source/output hashes",
+    "only .text changed",
+    "reject unknown/truncated/already patched input",
+    "reject invalid tree baseline before writes",
+    "fixture install/restore bytes and metadata",
+    "reject double install",
+    "validation active under python -O"
+  ],
+  "limits": "Temporary fixture uses user xattr, not security.selinux; no Android runtime test"
+}
