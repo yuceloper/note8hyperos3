@@ -1,0 +1,11 @@
+{
+  "assets/lib64/libbase.so": "545869a2a8c83c3bfe0fd613270df7bed85146f848dfd1c24e0920b028336aed",
+  "assets/lib64/libbpf.so": "95f949f7e85e527bfda0537b0b76b61dd7ce4c9dc8da0e2091c1e82c2254d80e",
+  "assets/lib64/libc++.so": "281ab746e1b79dab176f67e82c4e2b063217342261dde06817a2e67fc3295ca1",
+  "assets/mainline/clatd.o": "fdaf1ab6e9b377eca8f2dd63b931e1b4f43fcbeceec34854bd924d9d83ce5e45",
+  "assets/mainline/dscpPolicy.o": "fae0631caab8e8cc36b7c7928919a4a901443190994e02b566ccf6ad17cbfda4",
+  "assets/mainline/netd.o": "e58fb20ba78096d95cbf79549e25fce6ebd971f8e26d3ecf4fd74072389d96a1",
+  "assets/mainline/offload.o": "fae49bdc9d4cc05866ac701659e5abeb0c1ee7c0a924f0dc29c51e7e69e6d491",
+  "assets/mainline/test.o": "a96ce4c2b9a2c15a3d9e7f93376b7010b850f4594db52889505880743c21ff6b",
+  "assets/netbpfload": "775ed16eaed61151647cd50b454b16f500204911760ec196bd3f2634b6881da6"
+}

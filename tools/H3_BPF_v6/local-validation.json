@@ -1,0 +1,47 @@
+{
+  "status": "STATIC_VALIDATION_ONLY_NOT_BOOT_TESTED",
+  "lineage_capex_sha256": "e361a543faef2e634bb79f8e8b053e99ab7d3a359bce31c3ad1957789764aa57",
+  "bpf_level_source": "https://raw.githubusercontent.com/LineageOS/android_device_xiaomi_sm6125-common/lineage-23.2/product.prop",
+  "elf": {
+    "assets/netbpfload": {
+      "runpath": "$ORIGIN/../lib64/ginkgo-bpf-v6",
+      "needed": [
+        "libbase.so",
+        "liblog.so",
+        "libbpf.so",
+        "libc++.so",
+        "libc.so",
+        "libm.so",
+        "libdl.so"
+      ]
+    },
+    "assets/lib64/libbase.so": {
+      "runpath": "$ORIGIN",
+      "needed": [
+        "liblog.so",
+        "libc++.so",
+        "libc.so",
+        "libm.so",
+        "libdl.so"
+      ]
+    },
+    "assets/lib64/libbpf.so": {
+      "runpath": "$ORIGIN",
+      "needed": [
+        "libz.so",
+        "libc++.so",
+        "libc.so",
+        "libm.so",
+        "libdl.so"
+      ]
+    },
+    "assets/lib64/libc++.so": {
+      "runpath": "$ORIGIN",
+      "needed": [
+        "libc.so",
+        "libm.so",
+        "libdl.so"
+      ]
+    }
+  }
+}

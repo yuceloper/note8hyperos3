@@ -1,0 +1,6 @@
+{
+  "assets/libnetd_updatable.so": "75e7917e7f80283338677c85915949a29d34a9d3eb8ad4bc1f5b6368eff26690",
+  "assets/private/libginkgo_netd_base.so": "37b8fc7e9f13864451b088195d401544770ef846448a71bb6f0655e27a26a601",
+  "assets/private/libginkgo_netd_cxx.so": "2d5f92ff4f74649e98bf47e9f13958287f542ecc818d0e217b939cd886f2bf59",
+  "assets/private/libginkgo_netd_utils.so": "31f61b439d4ede52d92a123c9ba8b4b4fb580f1ecc0cb58e117f4bf02befb789"
+}

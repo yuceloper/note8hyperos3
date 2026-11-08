@@ -1,0 +1,8 @@
+on load-bpf-programs
+    mount none /system/etc/ginkgo-bpf-v6/mainline/clatd.o /apex/com.android.tethering/etc/bpf/mainline/clatd.o bind
+    mount none /system/etc/ginkgo-bpf-v6/mainline/dscpPolicy.o /apex/com.android.tethering/etc/bpf/mainline/dscpPolicy.o bind
+    mount none /system/etc/ginkgo-bpf-v6/mainline/netd.o /apex/com.android.tethering/etc/bpf/mainline/netd.o bind
+    mount none /system/etc/ginkgo-bpf-v6/mainline/offload.o /apex/com.android.tethering/etc/bpf/mainline/offload.o bind
+    mount none /system/etc/ginkgo-bpf-v6/mainline/test.o /apex/com.android.tethering/etc/bpf/mainline/test.o bind
+    exec_start ginkgo-bpfloader
+    wait_for_prop bpf.progs_loaded 1
