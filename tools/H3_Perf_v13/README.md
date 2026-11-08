@@ -29,7 +29,7 @@ Adresler kaynak ELF .gnu_debugdata sembollerinden doğrulandı. Çağıran kodla
 
 - prepare.py: yalnızca yerel girdiden ayrı çıktı üretir. Varlığı olmayan output dizini ister.
 - install.py: yalnızca çevrimdışı Linux V12 çalışma ağacını değiştirir. Kütüphane, V12 build.prop, V8 SurfaceFlinger ve V11 politika hash'lerini doğrular. Yedek oluşturur; uid/gid, mode, xattr ve zamanları korur. Normal Python hatasında geri yüklemeyi dener; elektrik kesintisi/işlemin öldürülmesi için atomik işlem garantisi yoktur.
-- install.py --restore: beklenen V13 dosyasını doğrulanmış V12 yedeğine döndürür. Sonradan değiştirilmiş dosyanın üzerine yazmaz.
+- install.py --restore: beklenen V13 dosyasını doğrulanmış V12 yedeğine döndürür; yarım kalan geri almadan sonra dosya zaten V12 ise metadata doğrulamasını tamamlar. Başka hash'teki dosyanın üzerine yazmaz.
 - verify.py: doğru yerel binary ile yapısal kontrolleri ve geçici ağaçta install/restore testlerini çalıştırır. Security SELinux xattr'ı veya Android linker/CFI çalışmasını test etmez.
 
 ## Yerel çıktı ve kontroller
@@ -40,6 +40,12 @@ python3 tools/H3_Perf_v13/verify.py --source /path/to/original/libqti-perfd-clie
 ```
 
 Binary dosyaları repoya eklenmez. prepare.py standart Python kütüphanesiyle hash kontrollü yeniden üretir. Girdi olarak vendor/lib64/libqti-perfd-client.so kullanmayın; isimleri ve arayüzleri farklıdır.
+
+### Kurulum revizyonu 2
+
+İlk cihaz sahibi denemesinde Docker mevcut xattr'ı yeniden set etmeye EPERM verdi; geri alma da aynı noktada durdu. Revizyon 2 yalnızca gerçekten değişmiş uid/gid/mode/xattr değerlerini yazar, tüm değerleri yine doğrular. Her setxattr çağrısının reddedildiği senaryoda install/restore testi geçti. Bu gerçek security.selinux veya cihaz açılış testinin yerine geçmez. İçerik yazımıyla bozulabilen capability/IMA/EVM etiketleri varsa yazmadan durur.
+
+İlk denemeden kalan ağaç için önce eski yedekle --restore çalıştırın. Başarıdan sonra eski yedeği silmeden yeni bir yedek dizini (örneğin hyperos3-perf-v13-r2) ile uygulayın. Binary yama ve aday SHA256 değişmedi.
 
 ## V12 çalışma ağacına uygulama
 

@@ -26,15 +26,25 @@ def metadata(path):
 
 
 def rewrite(path, data, meta):
-    with path.open('r+b') as f:
-        f.write(data)
-        f.truncate()
-        f.flush()
-        os.fsync(f.fileno())
-    os.chown(path, meta['uid'], meta['gid'])
-    os.chmod(path, meta['mode'])
+    if path.read_bytes() != data:
+        require(not {'security.capability', 'security.ima', 'security.evm'} &
+                set(os.listxattr(path)),
+                'Content-sensitive security xattrs require separate handling; no write')
+        with path.open('r+b') as f:
+            f.write(data)
+            f.truncate()
+            f.flush()
+            os.fsync(f.fileno())
+    st = path.stat()
+    if (st.st_uid, st.st_gid) != (meta['uid'], meta['gid']):
+        os.chown(path, meta['uid'], meta['gid'])
+    if stat.S_IMODE(path.stat().st_mode) != meta['mode']:
+        os.chmod(path, meta['mode'])
+    current_attrs = {n: os.getxattr(path, n) for n in os.listxattr(path)}
     for name, value in meta['xattrs'].items():
-        os.setxattr(path, name, base64.b64decode(value))
+        expected = base64.b64decode(value)
+        if current_attrs.get(name) != expected:
+            os.setxattr(path, name, expected)
     require(path.read_bytes() == data, 'Write verification failed')
     now = metadata(path)
     require(all(now[k] == meta[k] for k in ('uid', 'gid', 'mode', 'xattrs')),
@@ -65,8 +75,8 @@ def main():
                 f.resolve().is_relative_to(root) and digest(f.read_bytes()) == expected,
                 'V12 baseline mismatch: ' + relative)
     if args.restore:
-        require(digest(target.read_bytes()) == CANDIDATE_SHA,
-                'Restore expects the installed V13 candidate')
+        require(digest(target.read_bytes()) in (CANDIDATE_SHA, SOURCE_SHA),
+                'Restore expects the V13 candidate or original V12 after interrupted rollback')
         original_path = backup / 'libqti-perfd-client_system.so'
         require(original_path.is_file() and not original_path.is_symlink(), 'Missing backup')
         original = original_path.read_bytes()

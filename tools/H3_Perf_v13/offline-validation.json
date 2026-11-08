@@ -9,7 +9,9 @@
     "reject invalid tree baseline before writes",
     "fixture install/restore bytes and metadata",
     "reject double install",
-    "validation active under python -O"
+    "validation active under python -O",
+    "install/restore when all setxattr calls deny EPERM",
+    "recover already-original file after interrupted rollback"
   ],
   "limits": "Temporary fixture uses user xattr, not security.selinux; no Android runtime test"
 }

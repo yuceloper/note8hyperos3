@@ -8,6 +8,7 @@ import struct
 import subprocess
 import sys
 import tempfile
+from unittest.mock import patch
 from pathlib import Path
 import install
 from prepare import CANDIDATE_SHA, SOURCE_SHA, PATCHES, patched, digest
@@ -83,19 +84,26 @@ def main():
                   'Baseline rejection mutated the tree')
             probe.write_bytes(b'fixture baseline')
             before = install.metadata(target)
-            run()
+            # Docker may allow getxattr but deny even same-value setxattr.
+            # No metadata change is needed during an in-place library write.
+            with patch.object(install.os, 'setxattr', side_effect=PermissionError('EPERM')):
+                run()
             check(target.read_bytes() == candidate, 'Install content mismatch')
             after = install.metadata(target)
             check(all(before[k] == after[k] for k in
                       ('uid', 'gid', 'mode', 'xattrs', 'mtime_ns')),
                   'Install did not preserve metadata')
             fail(run, 'Double install was accepted')
-            run(restore=True)
+            with patch.object(install.os, 'setxattr', side_effect=PermissionError('EPERM')):
+                run(restore=True)
             check(target.read_bytes() == source, 'Restore mismatch')
             after = install.metadata(target)
             check(all(before[k] == after[k] for k in
                       ('uid', 'gid', 'mode', 'xattrs', 'mtime_ns')),
                   'Restore did not preserve metadata')
+            with patch.object(install.os, 'setxattr', side_effect=PermissionError('EPERM')):
+                run(restore=True)
+            check(target.read_bytes() == source, 'Interrupted rollback recovery failed')
         finally:
             install.BASELINE = real_baseline
             sys.argv = real_argv
@@ -113,7 +121,9 @@ def main():
                                  'reject unknown/truncated/already patched input',
                                  'reject invalid tree baseline before writes',
                                  'fixture install/restore bytes and metadata',
-                                 'reject double install', 'validation active under python -O'],
+                                 'reject double install', 'validation active under python -O',
+                                 'install/restore when all setxattr calls deny EPERM',
+                                 'recover already-original file after interrupted rollback'],
                       'limits': 'Temporary fixture uses user xattr, not security.selinux; no Android runtime test'},
                      indent=2))
 
