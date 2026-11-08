@@ -1,0 +1,18 @@
+{
+  "status": "OFFLINE_VALIDATED_NOT_BOOT_TESTED",
+  "source_boot_sha256": "4d8ba538f9acadb1691d4ea2c2ecbb72937ba8b69fef0919cf31766bf3b97885",
+  "boot_sha256": "44e3d006feb80caf1df86dc447a4c4350eeb8d8ba039c68db139571e18ca23c7",
+  "boot_bytes": 21430272,
+  "added_argument": "androidboot.boot_devices=soc/4744000.sdhci",
+  "other_header_fields_preserved": true,
+  "kernel_ramdisk_dtb_preserved": true,
+  "boot_id_verified": true,
+  "system_vendor_changes": false,
+  "format_required_for_this_patch": false,
+  "evidence": [
+    "EROFS root mounted successfully at 3.848s",
+    "metadata and system block aliases absent in first stage",
+    "fatal mount failure at 44.156s",
+    "failed-boot cmdline lacks androidboot.boot_devices"
+  ]
+}

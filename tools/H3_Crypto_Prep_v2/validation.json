@@ -1,0 +1,12 @@
+{
+  "status": "OFFLINE_VALIDATED_NOT_BOOT_TESTED",
+  "previous_fstab_sha256": "15aab530a70030f9276019bf52d9fe7d0057b7ddc6693448dd5bfe2c2bca7bbe",
+  "fstab_sha256": "0cb4f1d156d106f76b2d2569dbdfb17b694b9579d8529ee3e9d95e78e101bfc7",
+  "boot_sha256": "4d8ba538f9acadb1691d4ea2c2ecbb72937ba8b69fef0919cf31766bf3b97885",
+  "boot_bytes": 21430272,
+  "kernel_and_dtb_preserved_from_v1": true,
+  "cmdline_preserved": true,
+  "data_change": "Remove only wrappedkey_v0 flags; retain FBE v2, inlinecrypt and metadata encryption",
+  "existing_userdata_compatibility": "NOT_PROVEN; Android17-to-16 app/framework data compatibility not tested",
+  "full_vintf_validation": false
+}

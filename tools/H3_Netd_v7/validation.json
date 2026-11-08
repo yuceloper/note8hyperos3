@@ -1,0 +1,11 @@
+{
+  "status": "STATIC_VALIDATION_ONLY_NOT_BOOT_TESTED",
+  "exported_symbols_match": [
+    "__cfi_check",
+    "libnetd_updatable_init@@LIBNETD_UPDATABLE",
+    "libnetd_updatable_tagSocket@@LIBNETD_UPDATABLE",
+    "libnetd_updatable_untagSocket@@LIBNETD_UPDATABLE"
+  ],
+  "init_directory_mount_permission_present": "(allow init system_file (dir (mounton)))",
+  "policy_unchanged": true
+}

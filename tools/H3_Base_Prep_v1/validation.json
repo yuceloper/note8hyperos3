@@ -1,0 +1,25 @@
+{
+  "source_init_sha256": "6de04dd0319321e98a5fd18b0e7c9377a5ac52e5fa239c33072c5481239179d3",
+  "patched_init_sha256": "5b6c2608fbc37e1b3da0e32c1957d337078da83d803f8434b8f775eea16df1d1",
+  "policy_sha256": "9704fd3d823f20d2a1a9b8c93aea859134b5b6ad233e46336ad96ba6c87a9a45",
+  "odm_context_sha256": {
+    "odm_mac_permissions.xml": "9fc6e3bc49b67055ec3e2059f5fce7c7e5b72069697d82f963aec4dd2d61fcf0",
+    "odm_service_contexts": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "odm_sepolicy.cil": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+    "odm_property_contexts": "e8e72c20b686a4fcb325a6c028f3f2f8d2dd301692d0e8f54fe332cdf7291ef2",
+    "odm_file_contexts": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "odm_hwservice_contexts": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "odm_seapp_contexts": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "odm_entries": [
+    "build.prop",
+    "group",
+    "media_profiles_V1_0.xml",
+    "passwd",
+    "permissions",
+    "vintf"
+  ],
+  "status": "OFFLINE_POLICY_AND_INIT_ONLY_NOT_BOOT_READY",
+  "vintf_check": "NOT_RUN",
+  "vintf_modified": false
+}

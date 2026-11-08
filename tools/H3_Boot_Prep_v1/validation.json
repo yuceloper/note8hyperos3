@@ -1,0 +1,24 @@
+{
+  "status": "OFFLINE_VALIDATED_NOT_BOOT_TESTED",
+  "source_boot_sha256": "0cbc8b61b8e14e67ab7c2b4ce098504735c103e22b71c216e39db3dc740dcfa5",
+  "candidate_boot_sha256": "1ba87fc1cea2f3a0b9df4a616633d43dc776e28a5ee9acb588511ac3fd6a1c41",
+  "candidate_bytes": 21430272,
+  "kernel_preserved": true,
+  "cmdline_preserved": true,
+  "kernel_sha256": "c9288bf53a1ae06e9f3108b5a0f8dd2cb8499f252b55bd53d94771ae9a07658f",
+  "fstab_sha256": "15aab530a70030f9276019bf52d9fe7d0057b7ddc6693448dd5bfe2c2bca7bbe",
+  "fstab_suffix": "emmc",
+  "dt_fstab_compatible_changed_to": "android,xxxxx",
+  "crypto_flags_preserved": true,
+  "original_avb_footer_retained": false,
+  "checks": [
+    "original boot SHA1 ID verified",
+    "new boot SHA1 ID verified",
+    "ramdisk decompress roundtrip",
+    "kernel byte comparison",
+    "cmdline byte comparison",
+    "DTB size preserved",
+    "fits 64 MiB boot partition"
+  ],
+  "vintf_full_validation": false
+}

@@ -14,7 +14,7 @@ Bu proje resmî Xiaomi ROM'u değildir. Açılması, tüm donanımın ve güvenl
 
 ## Repo kapsamı
 
-Şimdilik geliştirme kayıtları bulunur. Mac'teki hazırlama betikleri, araç sürümleri ve patch kaynakları henüz bu repoya aktarılmadı; yalnızca bu repodan ROM yeniden üretilemez. Geçmiş aday adları, kaynak commit/tag anlamına gelmez.
+Geliştirme kayıtları ve geçmiş hazırlama paketlerinden 29 metin dosyası bulunur. [Kaynak denetimi](docs/SOURCE_AUDIT.md), eksik girdileri ve doğrulama sınırlarını açıklar. Araçlar, binary girdilerin üretim tarifleri ve V8–V12 adımları henüz tamamlanmadığı için yalnızca bu repodan ROM yeniden üretilemez. Geçmiş aday adları, kaynak commit/tag anlamına gelmez.
 
 ROM arşivleri, çıkarılmış dosya sistemleri, imajlar, özel anahtarlar ve ham cihaz kayıtları Git'e eklenmez. İleride betikler ve küçük, incelenebilir yamalar konu dalları ve PR üzerinden takip edilecek.
 

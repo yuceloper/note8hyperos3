@@ -1,0 +1,12 @@
+{
+  "status": "OFFLINE_NEVERALLOW_COMPILE_PASSED_NOT_BOOT_TESTED",
+  "policy_sha256": "9704fd3d823f20d2a1a9b8c93aea859134b5b6ad233e46336ad96ba6c87a9a45",
+  "vendor_candidate_sha256": "250d7e4f4576e5d89b7cffde52592fbd71f1afb486a6e35ddc8b00e60066957f",
+  "changes": {
+    "removed_ot_rcp_rules": 3,
+    "adjusted_dontaudit_rules": 9,
+    "removed_conflicting_vendor_allow_rules": 14,
+    "removed_conflicting_public_allow_rules": 1
+  },
+  "neverallow_disabled": false
+}
