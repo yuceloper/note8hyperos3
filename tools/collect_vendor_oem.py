@@ -38,9 +38,12 @@ def main():
     if rc or stdout.strip() != b"ginkgo":
         raise SystemExit("Cihaz ginkgo olarak dogrulanamadi.")
 
+    rc, stdout, stderr = adb("shell", "ls -ldZ /vendor/lib /vendor/lib64 /vendor/bin /vendor/bin/hw /vendor/etc/init")
+    (dest / "vendor-roots.txt").write_bytes(stdout + stderr)
+
     command = (
-        "find /vendor/lib /vendor/lib64 /vendor/bin /vendor/etc/init "
-        "-type f 2>/dev/null"
+        "find -L /vendor/lib /vendor/lib64 /vendor/bin /vendor/etc/init "
+        "-type f"
     )
     rc, stdout, stderr = adb("shell", command)
     (dest / "vendor-file-list.txt").write_bytes(stdout)
@@ -53,8 +56,8 @@ def main():
         and any(word in Path(p.strip()).name.lower()
                 for word in ("ril", "oemhook"))
     })
-    if not selected:
-        raise SystemExit("RIL/OEM dosyasi bulunamadi; liste: " + str(dest))
+    # Confirmed by the supplied qcrild.rc, independent of find traversal.
+    selected = sorted(set(selected) | {"/vendor/bin/hw/qcrild"})
 
     for remote in selected:
         local = dest / remote.lstrip("/")
@@ -65,6 +68,8 @@ def main():
         if rc == 0 and local.is_file():
             record["size"] = local.stat().st_size
             with local.open("rb") as stream:
+                record["elf"] = stream.read(4) == b"\x7fELF"
+                stream.seek(0)
                 record["sha256"] = hashlib.file_digest(stream, "sha256").hexdigest()
         records.append(record)
         print(("OK " if rc == 0 else "ATLANDI ") + remote, flush=True)
@@ -77,8 +82,10 @@ def main():
         tf.add(dest, arcname=dest.name)
     print("PAKET:", archive)
     print("Telefona yazma, reboot veya flash yapilmadi.")
-    if not any(r.get("sha256") for r in records):
-        raise SystemExit("Hicbir dosya cekilemedi; hata manifesti pakette.")
+    native = sum(bool(r.get("elf")) for r in records)
+    print("ELF DOSYASI:", native)
+    if not native:
+        raise SystemExit("Modem ikilisi/kutuphanesi alinamadi; hata manifesti pakette. Bu paket native analiz icin yeterli degil.")
 
 if __name__ == "__main__":
     main()
