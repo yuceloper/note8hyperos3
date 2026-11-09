@@ -48,6 +48,19 @@ def certificate(apk):
     if len(certs)!=1:raise RuntimeError('Expected one signer')
     return certs[0]
 
+def verify_native_alignment(apk):
+    with zipfile.ZipFile(apk) as z, apk.open('rb') as raw:
+        libs=[i for i in z.infolist() if i.filename.startswith('lib/') and i.filename.endswith('.so')]
+        if len(libs)!=42:raise RuntimeError('Expected 42 native libraries')
+        for item in libs:
+            if item.compress_type!=zipfile.ZIP_STORED:raise RuntimeError('Compressed native library: '+item.filename)
+            raw.seek(item.header_offset)
+            header=raw.read(30)
+            if header[:4]!=b'PK\x03\x04':raise RuntimeError('Invalid local ZIP header')
+            name_len,extra_len=struct.unpack_from('<HH',header,26)
+            offset=item.header_offset+30+name_len+extra_len
+            if offset%4096:raise RuntimeError('Native library not page aligned: '+item.filename)
+
 def main():
     p=argparse.ArgumentParser();p.add_argument('--reference',type=Path,required=True);p.add_argument('--out',type=Path,required=True);a=p.parse_args()
     ref,out=a.reference.resolve(),a.out.resolve()
@@ -66,9 +79,10 @@ def main():
                 if not sig(item.filename):after.writestr(item,patched if item.filename=='classes.dex' else before.read(item.filename))
     badging=subprocess.check_output(['aapt','dump','badging',str(unsigned)],text=True)
     if not re.search(r"^package: name='com.android.camera' ",badging,re.M):raise RuntimeError('Package mismatch')
-    run('zipalign','4',unsigned,aligned)
+    run('zipalign','-p','4',unsigned,aligned)
     run('apksigner','sign','--ks',key,'--ks-key-alias','micamera6test','--ks-pass','pass:android','--key-pass','pass:android','--out',signed,aligned)
-    run('apksigner','verify','--verbose',signed);run('zipalign','-c','4',signed)
+    run('apksigner','verify','--verbose',signed);run('zipalign','-c','-p','4',signed)
+    verify_native_alignment(signed)
     if certificate(source)!=certificate(signed):raise RuntimeError('Signer differs from V34')
     with zipfile.ZipFile(source) as before,zipfile.ZipFile(signed) as after:
         expected={n for n in before.namelist() if not sig(n)}
@@ -79,7 +93,7 @@ def main():
         source_sha256=SOURCE_SHA,same_signer_as_v34=True,changed_method='Lz/B;->run()V case at byte 66',
         startup_test_write_omitted=True,real_lut_paths_changed=False,actual_lut_compatibility_verified=False,
         gallery_signature_permission_fixed=False,manifest_resources_native_preserved=True,
-        policy_changed=False,offline_tree_modified=False,installed=False)
+        policy_changed=False,offline_tree_modified=False,installed=False,native_zip_alignment_bytes=4096,native_alignment_verified=True)
     (out/'validation.json').write_text(json.dumps(report,indent=2)+'\n')
     print('V35 BASLANGIC YAZMA TESTI ADAYI HAZIR')
     print('SHA256:',report['apk_sha256'])
