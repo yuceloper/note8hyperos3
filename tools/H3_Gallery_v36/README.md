@@ -1,0 +1,11 @@
+# V36 Gallery integration investigation
+
+Device baseline: system V35, vendor V26, original-identity Camera 6.2. System and active APK hashes matched a316586185bfa320d9c888667bf044d7ab835004b759a5f1b009c931d52bbeaa; user removed the userdata update and pm path confirmed the product system APK. Initial lockscreen launch immediately after boot can show a failure toast. After waiting two minutes, both first launch and force-stop/cold launch succeeded. Keep this issue open with deferred boot-load investigation, not as a generally resolved camera bug.
+
+Known Gallery denial: Camera cannot bind com.miui.gallery/.util.GalleryBackgroundService because com.miui.gallery.permission.BIND_SERVICE is declared signature-only and Camera was resigned. Do not treat a privileged permission XML entry or pm grant as a remedy for a signature-only permission. No Gallery permission protection level has been changed.
+
+Camera client analysis (original donor code retained in V35): Lz/r0.a constructs normal review intents, including com.android.camera.action.REVIEW targeting com.miui.gallery. Lz/r0.c separately sends large thumbnail metadata and a ParcelFileDescriptor through an android.os.Messenger. If no Messenger is available it logs `Large thumbnail sharing not ready` and returns. Thus this service denial affects an integration path, not proof that all normal gallery viewing fails. Gallery receiving code and its caller checks still need inspection before choosing a fix.
+
+collect_reference.py reads installed Gallery APK paths through ADB, temporarily pulls the APKs to the Mac, and packages only root DEX files, AndroidManifest.xml and resources.arsc plus package-manager dumps. It collects no photos or application-private data, performs no installation, state changes, reboot or flash. APK hashes are recorded. Upload the resulting logs/gallery-v36-reference-*.zip for analysis. No need to upload private signing keys. Syntax checked locally; real collection requires the user's connected phone.
+
+Open issues remain: Gallery signature-protected background integration, imported/custom LUT compatibility and immediate-postboot launch delay. Do not mark these resolved based on the V35 startup-probe removal.
