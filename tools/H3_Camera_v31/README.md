@@ -1,0 +1,11 @@
+# V31 original Camera 6.2 Pro workspace preview guard
+
+V30 runtime confirms SYSTEM/UPDATED_SYSTEM_APP and hiddenApiEnforcementPolicy=0 for com.ginkgo.micamera6test. The user reports normal camera use works, with a crash on entering Pro. The crash is Resources.NotFoundException: String resource ID 0xffffffff in ManualWorkspaceItem.getPanelComponentManuallyET. This is the original Camera 6.2 fork, not ANX.
+
+The original DEX shows getValueDisplayString(mode,value) feeding Application.getString(resourceId) without checking for an unavailable result. V31 adds if-lez on that result and returns from only the ET workspace preview entry helper. Other preview entries continue in the caller. It does not disable Pro mode, alter exposure requests or map unsupported shutter values to invented labels. Actual cause of the unmatched preset/capability item remains unproven; the guard prevents the invalid resource lookup.
+
+Input is the exact V29 signed test APK SHA256 76cff12c13114e17d2ac9c33622e3f7476a186d3b9df78e768bc3b28dc0ecdd0 and its diagnostic-only.jks, mounted read-only. Exact classes2.dex hash is required. Existing ginkgo-camera-apk-tools:v27 contains Java/smali dependencies via apktool. The builder calls org.jf.baksmali.Main and org.jf.smali.Main with /usr/share/java/*, edits only the named smali method, reassembles classes2.dex, and preserves all other APK entries including manifest, model-gate-patched classes3.dex, resources and native libraries. It validates DEX integrity, package identity, APK signature and exact same certificate as V29/V30. Output must be a new directory.
+
+Local validation: original method disassembly/control flow inspected; guard insertion tests cover baksmali p-register and v-register syntax, recovery of the original source by removing the insertions, and duplicate-patch refusal. Python compilation passed. Full smali toolchain execution and on-device Pro/capture tests remain pending.
+
+Install signed output as an update (-r --no-incremental) to the same com.ginkgo.micamera6test on V30. This preserves its system-app/hidden-API setup and avoids another system flash. Do not uninstall the test app or replace the original com.android.camera. Keep original-test-v1/diagnostic-only.jks for further updates; no production/platform key is involved. Userdata-only APK updates are not yet incorporated in the offline ROM tree.
