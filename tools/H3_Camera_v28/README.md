@@ -1,0 +1,11 @@
+# V28 separate system camera diagnostic
+
+Adds the already signed com.ginkgo.anxtest APK (SHA256 54274a8e2c2ed971f66bd5332e5ddc687d1d095533f8f45f8d170f0aaf483180) and its 62 arm64 libraries under product/app/GinkgoANXTest. A product sysconfig allowlist grants hidden API access to this system package only. This is a package-level exception, not a single-method exemption. No privileged permission grant, SELinux change, global hidden API setting, original camera replacement, vendor edit, or firmware change.
+
+prepare.py expects /linux/build/hyperos3-ginkgo-v1, /reference/test-apk-v2/ANXCamera-ginkgo-test.apk, /out for its report. It refuses existing destinations and verifies original camera and V22 policy baselines. It inherits existing product APK/directory/sysconfig SELinux labels and uses root:root 0755/0644. Native libraries are unpacked beside the APK for bundled-system-app discovery. Failed final verification restores staged additions. In an interrupted process, inspect additions and staging before retrying; no automatic overwrite.
+
+package.py expects the named volume read-only at /linux, all host out references read-only at /reference, and images output at /result. It retains V25 packaging checks for MTD, policy, V23 zram adjustment, and V25 init markers, and verifies V28 files before EROFS build/fsck/padding. Output: hyperos3-ginkgo-v28-padded.img. Existing V26 vendor and boot remain separate.
+
+Validation performed here: Python compilation; temporary filesystem fixtures for stage/layout/hash preservation and rollback after injected verification failure (SELinux xattrs emulated by inode). No real ROM packaging or device boot test performed here. Actual hidden API behavior and camera capture remain unverified on the donor framework. This user-app-signed test may still need app-specific Java/JNI/feature adaptations. Original in-code package literals remain unchanged.
+
+After packaging, flash only the verified system image using the established device/size/hash checks. Do not wipe data. Check pm path and dumpsys package for SYSTEM or UPDATED_SYSTEM_APP, then launch com.ginkgo.anxtest and collect new crash logs. Never treat ActivityManager launch success alone as camera success.
