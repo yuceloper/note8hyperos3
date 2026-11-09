@@ -1,54 +1,41 @@
 # Mevcut durum
 
-Son kayıt: 2026-11-03. Kaynak: cihaz çıktıları ve kullanıcı testleri; bağımsız tam doğrulama değildir.
+Son kayıt: 2026-11-09. Kanıtlar cihaz çıktıları ve kullanıcı testleridir; tam donanım veya uzun süreli kararlılık sertifikası değildir. Önceki V12 durum metni tarihsel kalmıştı; aşağıdaki bilgiler güncel V35 karşılaştırma noktasını anlatır.
 
-## Karşılaştırma sürümü: V12
+## Güncel karşılaştırma noktası
 
-- system imajı: hyperos3-ginkgo-v12-padded.img
-- SHA256: 781ac1ef64c1d780b4ed23ca255a95ce0b27d09511a4b181db6f8bfa214d302e
-- Boyut: 8589934592 bayt (padded).
-- Politika SHA256 (V11'den korunan): 4deded9b6bd729155ed39c5e8e9c7a0673ecc9fb7a82a5c7c624c24d5d8d7475
-- V12 deneysel ayarları: vendor.display.disable_content_fps_hint=1 ve vendor.display.disable_compositor_tid_hint=1.
-- İmaj cihazda açıldı; iki property 1 olarak doğrulandı. Genel performans düzeltmesi kabul edilmedi.
-- V13 henüz hazırlanmış veya test edilmiş değil.
+- Cihaz: Redmi Note 8, ginkgo. Donor: creek Turkey HyperOS 3, Android 16.
+- System: hyperos3-ginkgo-v35-padded.img, 8589934592 bayt.
+- System imajı SHA256: 2a6ef7d44e92d7e337cadadda56d30574e218e980d2b3d1346bc2564e5a648f5.
+- Vendor: V26, SHA256 55da7275e3856b3758189f2e9e41203b2592b1e78cb9a0d346dc9db1fdd44b43. Boot değiştirilmedi.
+- Kamera: özgün HyperOS Camera 6.2 kodu, com.android.camera kimliği. Model kontrolü ve Pro ET önizleme kaynak hatası için yerel düzeltmeler var; V35 başlangıç Test.txt yazma tanısını atlıyor. Bu, gerçek LUT erişiminin düzeltildiği anlamına gelmez.
+- Gömülü kamera APK SHA256: a316586185bfa320d9c888667bf044d7ab835004b759a5f1b009c931d52bbeaa. Kullanıcı userdata güncellemesini kaldırdı; pm path /product/priv-app/MiuiCamera/MiuiCamera.apk doğrulandı.
+- SELinux politikası: d38305ac8bff790d9f18ec8541e412ce05344a43827c6fda73ff7d12146e952a. Neverallow kontrolleri korundu. Genel permissive çözüm uygulanmadı.
 
-## Gözlenen özellikler
+## Doğrulanan kullanım ve sınırlar
 
-| Alan | Kanıt / sınır |
+| Alan | Kullanıcı testi / kanıt |
 | --- | --- |
-| Açılış, ekran, dokunmatik | V12 açılıyor; uzun süreli güvenilirlik doğrulanmadı |
-| SIM | LOADED,ABSENT ve operatör görüldü; PIN/şebeke 2–3 dakika gecikebiliyor |
-| Parmak izi | V11 sonrası kullanıcı kayıt ve kilit açmanın çalıştığını bildirdi; gecikme var |
-| Telefon/Mesajlar/Kişiler | V10 uygulama yolları ve Dialer destek kütüphanesi doğrulandı; arama/SMS uçtan uca testi eksik |
-| Wi-Fi | Kurulumda bağlantı kuruldu; dayanıklılık testi yok |
-| Google kurulumu | Elle paket etkinleştirme sonrası tamamlandı; temiz kurulum çözümü eksik |
+| Açılış, ekran, dokunmatik | V35 açılıyor; ilk dakika takılmaları sürüyor |
+| Telefon/SIM | SIM yükleniyor ve arama yapıldı; birkaç dakikalık görüşmede ses/mikrofon normal bildirildi. PIN/şebeke gecikmesi tekrarlanabiliyor |
+| Bluetooth | ConfigStore sonrası açılma ve tarama doğrulandı; kapsamlı medya/arama dayanıklılığı tamamlanmadı |
+| Parmak izi | Kayıt ve kilit açma çalıştığı bildirildi; açılış yükünde gecikme var |
+| Kamera/Pro | Kullanıcı normal çekim ve Pro kullanımında çalışma bildirdi; tüm mod/lens kombinasyonları denenmedi |
+| Kamera–Galeri | Fotoğraf açma/yakınlaştırma, video sesli oynatma, kameraya dönüş ve kilit ekranından eski fotoğraflara erişim koruması testleri kullanıcı tarafından başarılı bildirildi |
+| FindDevice/MTD | V22 sonrası kullanıcı çalıştığını bildirdi; tüm bulut/kayıp cihaz akışları doğrulanmadı |
 
 ## Açık sorunlar
 
-1. Kamera: donor MiuiCamera model uyumsuzluğu uyarısıyla kapanıyor. Alternatif uygulamayla kamera HAL işlevi henüz doğrulanmadı.
-2. Uygulama geçişleri ve SystemUI animasyonlarında takılma.
-3. Qualcomm Perf HAL 2.2 / perf2 bulunamıyor; HyperOS istemcileri çağrı yapmaya devam ediyor. Bu, tüm takılmanın kanıtlanmış nedeni değil.
-4. Açılışta init adıyla SIGABRT; gerçek servis kaynağı belirsiz. Crash dump yardımcısı da başarısız.
-5. SIM PIN ve şebeke gecikmesi.
-6. Google kurulumunda elle etkinleştirme gereksinimi.
-7. Wallpaper Carousel, window type 2009 izni nedeniyle tekrarlayan çökme yaptı; kullanıcı ayarlardan kapattı. Temel neden giderilmedi.
+1. İlk dakika CPU/bellek/servis yükü ve arayüz takılması. Tek bir boşta top çıktısı kök neden kanıtı değildir.
+2. PIN girişinden sonra şebekenin geç görünmesi. SIM LOADED, operatör adı, gerçek IN_SERVICE ve geçerli sinyal ayrı ölçülmelidir.
+3. Yeniden başlatma hemen sonrası ilk kamera açılışında kilit ekranı başlatma uyarısı veya ana ekrandan bağlantı hatası/3 saniyelik kapanma gözlendi. İki dakika bekleme sonrası ilk kilit ekranı açılışı ve force-stop sonrası soğuk açılış geçti. Ana ekran geri sayım hatasının kesin tetikleyicisi henüz doğrulanmadı.
+4. GalleryBackgroundService bağlantısı com.miui.gallery.permission.BIND_SERVICE imza iznine takılıyor. Normal görüntüleme testleri geçse de paylaşımlı büyük önizleme/ön yükleme optimizasyonu geri yüklenmedi. Galeri imzası/izin koruması değiştirilmedi.
+5. Özel/import LUT desteği doğrulanmadı; V35 gerçek LUT yollarını değiştirmiyor.
+6. Temiz Google kurulumu, uzun süreli bağlantı/pil/derin uyku/GPS testleri ve 48 saat dayanıklılık tamamlanmadı.
+7. Wallpaper Carousel önceki çökmesi kullanıcı tarafından kapatılarak hafifletildi; kök nedenin giderildiği iddia edilmez.
 
-## Performans kanıtı
+## Sıradaki iş
 
-Aşağıdaki koşular eşdeğer kontrollü testler değil; yalnızca başlangıç kaydıdır.
+V37 salt okunur açılış zaman çizelgesi: açık --reboot seçeneğiyle bir yeniden başlatma, ardından üç dakika SIM/property, kayıt durumu, CPU sayaçları, bellek/PSI, top ve logcat toplama. Yeni ROM değişikliği önce ölçümle gerekçelendirilecek. V37 bir ROM imajı değildir.
 
-| Ölçüm | V11 Launcher | V12 Launcher | V11 SystemUI | V12 SystemUI |
-| --- | --- | --- | --- | --- |
-| Kare | 710 | 442 | 965 | 1013 |
-| Jank | %2.25 | %3.62 | %2.59 | %5.73 |
-| p50 | 16 ms | 11 ms | 15 ms | 19 ms |
-| p95 | 40 ms | 40 ms | 42 ms | 150 ms |
-| GPU p95 | 16 ms | 12 ms | 13 ms | 14 ms |
-
-Güncel boşta CPU örnekleri yaklaşık %99 idle gösterdi. Bu, geçiş anındaki yükü veya beklemeyi açıklamaz. Eski dumpsys cpuinfo açılış örneği güncel yük olarak kullanılmamalı.
-
-Vendor libqti-perfd-client.so fonksiyonları incelendi: minimal uyumluluk uygulaması; HyperOS istemcisiyle doğrudan değiştirilebilir kabul edilmiyor.
-
-## Doğrulanmamış alanlar
-
-Arama ve ses yolları, SMS, mobil veri, GPS fix, Bluetooth ses, hotspot, sensörler, USB aktarımı, şarj/ısı, derin uyku, gece pil tüketimi ve 48 saat kullanım. Güvenlik/şifreleme ve uygulama bütünlük uyumluluğu için de tam test yok.
+HyperOS 4 için creek ilk donor hedefidir; uygun gerçek paket doğrulanana kadar V35 geliştirmesi sürer. Güncelleme takvimi ile indirilebilir/uygun donor paketi aynı şey değildir.
