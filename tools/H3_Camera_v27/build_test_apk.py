@@ -6,7 +6,6 @@ import json
 import re
 import shutil
 import subprocess
-import xml.etree.ElementTree as ET
 import zipfile
 from pathlib import Path
 
@@ -14,7 +13,7 @@ OLD = "com.android.camera"
 NEW = "com.ginkgo.anxtest"
 A = "{http://schemas.android.com/apk/res/android}"
 EXPECTED = "1865a651c7ac8df642e599e61ef25952a0c0dbd1b6e7b2ef46c3cb050088c535"
-ET.register_namespace("android", A)
+from axml_patch import patch_manifest
 
 def digest(p):
     with p.open("rb") as f:
@@ -22,70 +21,6 @@ def digest(p):
 
 def run(*args):
     subprocess.run(list(map(str, args)), check=True, stdin=subprocess.DEVNULL)
-
-def rewrite_manifest(path):
-    tree = ET.parse(path)
-    root = tree.getroot()
-    if root.get("package") != OLD or root.get(A + "sharedUserId"):
-        raise RuntimeError("Unexpected source manifest identity")
-    # Preserve Java class names when changing the installed package identity.
-    class_attributes = {
-        "application": ("name", "backupAgent", "appComponentFactory", "manageSpaceActivity"),
-        "activity": ("name", "parentActivityName"),
-        "activity-alias": ("name", "targetActivity", "parentActivityName"),
-        "service": ("name",),
-        "receiver": ("name",),
-        "provider": ("name",),
-        "instrumentation": ("name",),
-    }
-    declared = {}
-    for node in root:
-        if node.tag in ("permission", "permission-tree", "permission-group"):
-            name = node.get(A + "name")
-            if name:
-                # All declarations get a new name, including vendor-named declarations.
-                declared[name] = NEW + ".declared." + name
-    for node in root.iter():
-        for attr in class_attributes.get(node.tag, ()):
-            value = node.get(A + attr)
-            if value and not value.startswith("@"):
-                if value.startswith("."):
-                    node.set(A + attr, OLD + value)
-                elif "." not in value:
-                    node.set(A + attr, OLD + "." + value)
-        for key, value in list(node.attrib.items()):
-            if value in declared:
-                node.set(key, declared[value])
-        if node.tag == "provider" and node.get(A + "authorities"):
-            node.set(A + "authorities", ";".join(
-                NEW + ".provider" + str(i) + "." + value
-                for i, value in enumerate(node.get(A + "authorities").split(";"))
-            ))
-        for attr in ("taskAffinity", "process"):
-            value = node.get(A + attr)
-            if value and value.startswith(OLD):
-                node.set(A + attr, NEW + value[len(OLD):])
-        # Restrict the diagnostic fork to manual launch; do not receive boot broadcasts.
-        if node.tag == "intent-filter":
-            for child in list(node):
-                if child.tag == "action" and child.get(A + "name") in (
-                    "android.intent.action.BOOT_COMPLETED",
-                    "android.intent.action.LOCKED_BOOT_COMPLETED"
-                ):
-                    node.remove(child)
-    root.set("package", NEW)
-    app = root.find("application")
-    if app is None:
-        raise RuntimeError("No application")
-    app.set(A + "label", "ANX Camera Test")
-    app.set(A + "extractNativeLibs", "true")
-    tree.write(path, encoding="utf-8", xml_declaration=True)
-
-def decode(apk, out, framework):
-    help_text = subprocess.run(["apktool", "d", "--help"],
-                               capture_output=True, text=True).stdout
-    flag = "--only-manifest" if "--only-manifest" in help_text else "--force-manifest"
-    run("apktool", "d", "-s", "-r", flag, "-p", framework, "-o", out, apk)
 
 def main():
     p = argparse.ArgumentParser()
@@ -108,25 +43,30 @@ def main():
     apk = ref / "app/ANXCamera.apk"
     if digest(apk) != EXPECTED:
         raise SystemExit("APK hash mismatch")
-    for tool in ("apktool", "aapt", "zipalign", "apksigner", "keytool"):
+    for tool in ("aapt", "zipalign", "apksigner", "keytool"):
         if not shutil.which(tool):
             raise SystemExit("Missing tool: " + tool)
     out.mkdir(parents=True)
-    framework = out / "framework"
-    decoded = out / "decoded"
-    decode(apk, decoded, framework)
-    rewrite_manifest(decoded / "AndroidManifest.xml")
     libs = ref / "app/lib/arm64"
-    target = decoded / "lib/arm64-v8a"
-    target.mkdir(parents=True, exist_ok=True)
     sources = sorted(libs.glob("*.so"))
     if len(sources) != 62 or any(p.name == "libcameraservice.so" for p in sources):
         raise RuntimeError("Unexpected library selection")
-    for lib in sources:
-        shutil.copyfile(lib, target / lib.name)
     unsigned, aligned = out / "unsigned.apk", out / "aligned.apk"
-    run("apktool", "b", "--aapt", shutil.which("aapt"),
-        "-p", framework, "-o", unsigned, decoded)
+    with zipfile.ZipFile(apk) as original, zipfile.ZipFile(unsigned, "w") as rebuilt:
+        patched = patch_manifest(original.read("AndroidManifest.xml"))
+        for item in original.infolist():
+            if item.filename.startswith("META-INF/") and (
+                item.filename.upper().endswith((".RSA", ".DSA", ".EC", ".SF"))
+                or item.filename.upper() == "META-INF/MANIFEST.MF"
+            ):
+                continue
+            if item.filename.startswith("lib/"):
+                raise RuntimeError("Unexpected native files in source APK")
+            data = patched if item.filename == "AndroidManifest.xml" else original.read(item.filename)
+            rebuilt.writestr(item, data)
+        for lib in sources:
+            rebuilt.write(lib, "lib/arm64-v8a/" + lib.name,
+                          compress_type=zipfile.ZIP_DEFLATED)
     with zipfile.ZipFile(apk) as before, zipfile.ZipFile(unsigned) as after:
         dex_names = [name for name in before.namelist()
                      if re.fullmatch(r"classes[0-9]*\.dex", name)]
@@ -161,6 +101,7 @@ def main():
         "apk_sha256": digest(signed),
         "native_libraries": len(sources),
         "original_dex_preserved": True,
+        "manifest_method": "binary_string_pool_and_attributes",
         "original_camera_modified": False,
         "privileged_permissions_granted": False,
         "policy_changed": False,
