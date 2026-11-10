@@ -52,12 +52,12 @@ cd "$HOME/note8hyperos3"
 git fetch origin experiment/signal-v38-legacy-response
 git restore --source=FETCH_HEAD --worktree -- tools/H3_Signal_v38
 mkdir -p out/signal-v38
-docker run --rm \
+docker run --rm --entrypoint python3 \
   -v "$PWD/tools/H3_Signal_v38:/package:ro" \
   -v "$PWD/out/signal-v38-reference:/source:ro" \
   -v "$PWD/out/signal-v38:/out" \
   ginkgo-camera-apk-tools:v27 \
-  python3 /package/build.py \
+  /package/build.py \
     --source /source/telephony-common.jar --out /out/review-v1 </dev/null
 cat out/signal-v38/review-v1/validation.json
 SH
