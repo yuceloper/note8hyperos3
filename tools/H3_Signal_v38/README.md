@@ -142,3 +142,15 @@ causes no changes; successful staging preserves JAR metadata and all preopt
 backup bytes/inodes; injected failure after JAR rewrite restores everything;
 injected failure after preopt rename also restores everything. These tests
 cover installation/rollback, not Android ART or radio behavior.
+
+### Shared VDEX aliases
+
+The arm/arm64 boot-telephony-common.vdex and .vdex.fsv_meta entries are four
+symlinks to ../boot-telephony-common.vdex and its .fsv_meta. The installer now
+verifies these exact link targets, backs up links themselves with rename,
+and verifies lstat metadata and link text without dereferencing them. All
+parent symlinks and unexpected alias targets still fail before changes.
+Total backup entries: eleven regular preopt/metadata files and four links.
+Verified with fixture trees: success, failure after JAR write, failure after
+alias backup rename, and rejection of an unexpected alias target. Every
+rollback preserves link text, inode, owner, mode, mtime, xattrs and file bytes.
