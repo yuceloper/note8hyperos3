@@ -12,17 +12,30 @@ for arch in ['arm','arm64']:
         PREOPT += [Path(f'system/framework/{arch}/boot-telephony-common.{ext}'),
                    Path(f'system/framework/{arch}/boot-telephony-common.{ext}.fsv_meta')]
 
-def digest(p):return hashlib.sha256(p.read_bytes()).hexdigest()
+LINKS={}
+for arch in ['arm','arm64']:
+    for suffix in ['', '.fsv_meta']:
+        rel=Path(f'system/framework/{arch}/boot-telephony-common.vdex{suffix}')
+        LINKS[rel]=f'../boot-telephony-common.vdex{suffix}'
+PREOPT += list(LINKS)
+
+def digest(p):
+    data=b'symlink\0'+os.fsencode(os.readlink(p)) if p.is_symlink() else p.read_bytes()
+    return hashlib.sha256(data).hexdigest()
 def meta(p):
     s=p.lstat()
-    if not stat.S_ISREG(s.st_mode) or s.st_nlink!=1:raise RuntimeError('Expected regular non-hardlinked file: '+str(p))
+    if not (stat.S_ISREG(s.st_mode) or stat.S_ISLNK(s.st_mode)) or s.st_nlink!=1:raise RuntimeError('Expected regular file or symlink with one link: '+str(p))
     return {'inode':s.st_ino,'uid':s.st_uid,'gid':s.st_gid,'mode':stat.S_IMODE(s.st_mode),
-            'mtime_ns':s.st_mtime_ns,'xattrs':{n:base64.b64encode(os.getxattr(p,n)).decode() for n in sorted(os.listxattr(p))}}
+            'mtime_ns':s.st_mtime_ns,'link_target':os.readlink(p) if p.is_symlink() else None,
+            'xattrs':{n:base64.b64encode(os.getxattr(p,n,follow_symlinks=False)).decode() for n in sorted(os.listxattr(p,follow_symlinks=False))}}
 def plain_path(tree,rel):
     p=tree
-    for part in rel.parts:
+    for i,part in enumerate(rel.parts):
         p=p/part
-        if p.is_symlink():raise RuntimeError('Symlink in installation path: '+str(p))
+        if p.is_symlink():
+            if i!=len(rel.parts)-1 or rel not in LINKS or os.readlink(p)!=LINKS[rel]:
+                raise RuntimeError('Unexpected symlink in installation path: '+str(p))
+    if rel in LINKS and not p.is_symlink():raise RuntimeError('Expected VDEX alias symlink: '+str(p))
     return p
 
 def rewrite(p,data,metadata):
@@ -75,7 +88,7 @@ def install(tree,candidate,report,out,backup,expected=CANDIDATE):
         written=True;rewrite(jar,replacement,items[str(REL)]['metadata'])
         if digest(jar)!=expected:raise RuntimeError('Installed JAR hash mismatch')
         for rel in PREOPT:
-            if (tree/rel).exists():raise RuntimeError('Stale target preopt still present')
+            if (tree/rel).exists() or (tree/rel).is_symlink():raise RuntimeError('Stale target preopt still present')
         result={'status':'OFFLINE_INSTALLED_NOT_BOOT_TESTED','source_sha256':SOURCE,
                 'candidate_sha256':expected,'backup':str(backup),'files':items,
                 'moved_preoptimization_files':list(map(str,PREOPT))}
@@ -90,7 +103,7 @@ def install(tree,candidate,report,out,backup,expected=CANDIDATE):
         for rel in reversed(moved):
             try:
                 dst=tree/rel;src=backup/'preopt'/rel
-                if dst.exists():raise RuntimeError('Rollback destination unexpectedly exists: '+str(dst))
+                if dst.exists() or dst.is_symlink():raise RuntimeError('Rollback destination unexpectedly exists: '+str(dst))
                 src.rename(dst)
                 if digest(dst)!=items[str(rel)]['sha256'] or meta(dst)!=items[str(rel)]['metadata']:
                     raise RuntimeError('Preopt rollback verification failed: '+str(rel))
@@ -100,7 +113,7 @@ def install(tree,candidate,report,out,backup,expected=CANDIDATE):
         raise RuntimeError('Installation failed; original JAR and preopt restored and verified: '+repr(error)) from error
     print('V38 TELEPHONY JAR CALISMA AGACINA YERLESTIRILDI')
     print('SHA256: '+expected)
-    print('JAR INODE/IZIN/ETIKETLERI KORUNDU. 11 ESKI DERLEME/META DOSYASI YEDEGE TASINDI.')
+    print('JAR INODE/IZIN/ETIKETLERI KORUNDU. 11 ESKI DOSYA VE 4 VDEX BAGLANTISI YEDEGE TASINDI.')
     print('POLITIKA VE VENDOR DEGISTIRILMEDI. TELEFONA YAZILMADI.')
 
 def main():
