@@ -154,3 +154,22 @@ Total backup entries: eleven regular preopt/metadata files and four links.
 Verified with fixture trees: success, failure after JAR write, failure after
 alias backup rename, and rejection of an unexpected alias target. Every
 rollback preserves link text, inode, owner, mode, mtime, xattrs and file bytes.
+
+## DEVICE TEST FAILED — 2026-11-10
+
+Do not reflash V38 as a working candidate. System image SHA256
+`dff3123cbfc5d8242ba80878af83fb0f73d8b0f9caf9024cf2390054907c9446`
+booted Android but the phone process repeatedly failed loading
+`com.android.internal.telephony.SettingsObserver` and `cat.CatLog`.
+SIM/operator/baseband properties and phone PID were empty at uptime 289s.
+The crash buffer also contains a boot dex2oat64 abort in ClassLinker
+InitWithoutImage (`Check failed: new_exception != nullptr`). Static assembly,
+class-count and method comparisons did not establish bootclasspath runtime
+compatibility. The exact failure mechanism remains unconfirmed; do not
+assume these classes were removed or attribute this to SIM hardware.
+
+Immediate recovery is the known working V35 system image, SHA256
+`2a6ef7d44e92d7e337cadadda56d30574e218e980d2b3d1346bc2564e5a648f5`.
+Keep vendor V26 and userdata. Retain the V38 offline tree and verified
+backups for investigation; do not build another release from that tree
+until its bootclasspath/preoptimization compatibility is addressed.
