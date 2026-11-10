@@ -211,7 +211,7 @@ for rel38 in preopt38:
     if rel38 in links38:
         if not saved_file38.is_symlink() or os.readlink(saved_file38)!=links38[rel38]:
             raise RuntimeError('V38 backed up alias mismatch')
-        h38=hashlib.sha256(b'symlink\\0'+os.fsencode(os.readlink(saved_file38))).hexdigest()
+        h38=hashlib.sha256((b'symlink'+bytes([0]))+os.fsencode(os.readlink(saved_file38))).hexdigest()
     else:
         if saved_file38.is_symlink():raise RuntimeError('V38 regular backup became symlink')
         h38=digest(saved_file38)
