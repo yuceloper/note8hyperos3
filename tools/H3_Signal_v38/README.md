@@ -95,3 +95,50 @@ working; airplane mode and SIM/radio-off must clear service and bars; confirm
 no verifier errors, phone crashes/ANRs, or forced REQUEST_NOT_SUPPORTED from
 the legacy signal callbacks. The modern callbacks and real modem-error paths
 must continue to work. Raw captures and JARs stay local, never in git.
+
+
+## Offline installation after user build verification
+
+The Mac build candidate was verified as SHA256
+f7249325117c9777652d374f2431e3a2589f0c06c13aadbad1c867ec2cf31d0f.
+The live/reference/offline source hashes all match. The installer pins this
+candidate hash and checks the review report, all non-DEX JAR entries, and the
+source JAR before modifying the offline tree.
+
+`install.py` writes the JAR in place, retains its inode/owner/mode/xattrs/mtime,
+and verifies them. It backs up original bytes plus metadata under
+/linux/backups/hyperos3-signal-v38. Exactly eleven target preopt/metadata files
+are moved there with same-filesystem renames, preserving their inodes and
+attributes: telephony-common.jar.fsv_meta, boot-telephony-common.vdex and its
+sidecar, and boot-telephony-common.art/oat plus sidecars for arm and arm64.
+Other boot image components are retained; ART must handle dependent image
+invalidation on the first boot. First boot can take longer; no boot success
+is claimed yet.
+
+This step does not rebuild an image, flash a phone, alter vendor/policy,
+clear userdata, or delete general ART caches.
+
+```bash
+bash <<'SH'
+set -euo pipefail
+cd "$HOME/note8hyperos3"
+git fetch origin experiment/signal-v38-legacy-response
+git restore --source=FETCH_HEAD --worktree -- tools/H3_Signal_v38
+
+docker run --rm --entrypoint python3 \
+  -v note8-hyperos3-work:/linux \
+  -v "$PWD/tools/H3_Signal_v38:/package:ro" \
+  -v "$PWD/out/signal-v38/review-v1:/candidate:ro" \
+  -v "$PWD/out/signal-v38:/out" \
+  ginkgo-port-tools:erofs \
+  /package/install.py \
+    --candidate /candidate/telephony-common-v38.jar \
+    --report /candidate/validation.json </dev/null
+SH
+```
+
+Installer verification used temporary fixture trees: wrong candidate hash
+causes no changes; successful staging preserves JAR metadata and all preopt
+backup bytes/inodes; injected failure after JAR rewrite restores everything;
+injected failure after preopt rename also restores everything. These tests
+cover installation/rollback, not Android ART or radio behavior.
