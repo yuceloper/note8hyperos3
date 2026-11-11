@@ -31,7 +31,7 @@
     throw v0
 .end method
 
-.method public static main([Ljava/lang/String;)V
+.method private static runTests()V
     .registers 8
     # Construct an old HAL 1.2 payload. LTE RSRP=-86 dBm, TD-SCDMA RSCP=-70 dBm.
     new-instance v0, Landroid/hardware/radio/V1_2/SignalStrength;
@@ -100,5 +100,51 @@
     sget-object v0, Ljava/lang/System;->out:Ljava/io/PrintStream;
     const-string v1, "PROBE_ALL_OK"
     invoke-virtual {v0, v1}, Ljava/io/PrintStream;->println(Ljava/lang/String;)V
+    return-void
+.end method
+
+# Bootstrap is process-local. The shell UID and SELinux domain are unchanged.
+.method public static main([Ljava/lang/String;)V
+    .registers 5
+    sget-object v0, Ljava/lang/System;->out:Ljava/io/PrintStream;
+    const-string v1, "PROBE_STAGE: bootstrap"
+    invoke-virtual {v0, v1}, Ljava/io/PrintStream;->println(Ljava/lang/String;)V
+    :bootstrap_start
+    invoke-static {}, Landroid/os/Looper;->prepareMainLooper()V
+    invoke-static {}, Landroid/app/ActivityThread;->systemMain()Landroid/app/ActivityThread;
+    move-result-object v1
+    invoke-static {}, Landroid/app/ActivityThread;->currentApplication()Landroid/app/Application;
+    move-result-object v1
+    if-nez v1, :context_present
+    new-instance v1, Ljava/lang/IllegalStateException;
+    const-string v2, "ActivityThread.currentApplication is null after bootstrap"
+    invoke-direct {v1, v2}, Ljava/lang/IllegalStateException;-><init>(Ljava/lang/String;)V
+    throw v1
+    :context_present
+    const-string v2, "telephony_subscription_service"
+    invoke-virtual {v1, v2}, Landroid/content/Context;->getSystemService(Ljava/lang/String;)Ljava/lang/Object;
+    move-result-object v1
+    if-nez v1, :context_ready
+    new-instance v1, Ljava/lang/IllegalStateException;
+    const-string v2, "SubscriptionManager unavailable in probe context"
+    invoke-direct {v1, v2}, Ljava/lang/IllegalStateException;-><init>(Ljava/lang/String;)V
+    throw v1
+    :context_ready
+    const-string v1, "CONTEXT_READY: Application and SubscriptionManager exist"
+    invoke-virtual {v0, v1}, Ljava/io/PrintStream;->println(Ljava/lang/String;)V
+    invoke-static {}, Lcom/ginkgo/signalprobe/Main;->runTests()V
+    :bootstrap_end
+    const/4 v1, 0x0
+    invoke-static {v1}, Ljava/lang/System;->exit(I)V
+    return-void
+    .catch Ljava/lang/Throwable; {:bootstrap_start .. :bootstrap_end} :probe_failed
+    :probe_failed
+    move-exception v1
+    const-string v2, "PROBE_FAILED: see exception below"
+    invoke-virtual {v0, v2}, Ljava/io/PrintStream;->println(Ljava/lang/String;)V
+    invoke-virtual {v1, v0}, Ljava/lang/Throwable;->printStackTrace(Ljava/io/PrintStream;)V
+    invoke-virtual {v0}, Ljava/io/PrintStream;->flush()V
+    const/4 v1, 0x1
+    invoke-static {v1}, Ljava/lang/System;->exit(I)V
     return-void
 .end method
