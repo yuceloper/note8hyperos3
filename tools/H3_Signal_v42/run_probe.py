@@ -4,7 +4,7 @@ import argparse,datetime,hashlib,json,subprocess,sys,tarfile
 SOURCE='f3c66613c8433783c1b6b8608b7e89721b7a3d9d127ad7e92bf0817f80c7b258'
 INPUTS={'v39':'452faaae8d36ac59f4f6b7830ea4fd126b878678f377e79e8184568f40a33300',
         'v40':'1279a5eb44e5a0ff6ca32943af7b7b31f793c668adff9c1849ff146c3f9fe5a0'}
-MARKERS=['V39_NEGATIVE_CONTROL_OK:','V40_V1_2_OK:','V40_V1_0_OK:','PROBE_ALL_OK']
+MARKERS=['CONTEXT_READY:','V39_NEGATIVE_CONTROL_OK:','V40_V1_2_OK:','V40_V1_0_OK:','PROBE_ALL_OK']
 def run(adb,serial,args,timeout=15):
     try:
         r=subprocess.run([adb,'-s',serial,*args],stdin=subprocess.DEVNULL,capture_output=True,text=True,timeout=timeout)
@@ -17,7 +17,7 @@ def main():
     ap.add_argument('--adb',default='adb');ap.add_argument('--serial',default='12da33e7');ap.add_argument('--reveal',action='store_true');a=ap.parse_args()
     probe=Path(a.probe);validation=json.loads(probe.with_name('validation.json').read_text())
     h=hashlib.sha256(probe.read_bytes()).hexdigest()
-    if validation.get('status')!='ISOLATED_PROBE_BUILT_NOT_RUN' or validation.get('probe_sha256')!=h:
+    if validation.get('probe_revision')!=2 or validation.get('status')!='ISOLATED_PROBE_BUILT_NOT_RUN' or validation.get('probe_sha256')!=h:
         raise RuntimeError('Probe manifest/hash mismatch')
     for version,wanted in INPUTS.items():
         if validation.get('inputs',{}).get(version,{}).get('jar_sha256')!=wanted:raise RuntimeError('Wrong converter input')
