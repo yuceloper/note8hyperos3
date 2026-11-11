@@ -1,0 +1,11 @@
+# Incoming call UI failure investigation (V43 baseline)
+
+User reports ringtone/vibration, no answer UI and a technical error toast. incoming-call-20261111-103401.tar.gz: call reaches RINGING; Google InCallService foreground service starts at10:19:08.607 and stops at08.757; missing com.android.contacts/com.android.incallui.InCallServiceImpl fallback bind attempts follow; lastanr has no ANR. Default role is com.google.android.dialer. Subsequent permission output confirms POST_NOTIFICATIONS and USE_FULL_SCREEN_INTENT granted, UID full-screen AppOp allow. No reason to grant broad permissions.
+
+telecom-reference-20261111-113931.tar.gz contains live /system/priv-app/Telecom/Telecom.apk, package dump and overlay list. Base resources name ui_default_package=com.android.incallui, ui_default_package_dialer=com.android.contacts, incall_default_class=com.android.incallui.InCallServiceImpl. Both Telecom common and MIUI overlays are enabled: base resource values are NOT necessarily effective values.
+
+Actual UiMonitorManager.maybeRelunchDefaultInCallService schedules checks after 2000ms for a sole ringing, non-self-managed call (subject to exclusions). Handler uses UiMonitorUtils.isUIDisplayed, system/third-party classification, and Google CSP checks. redirectSystemDialerAndToast sets mShouldRedirect, rebinds services and displays redirect_system_dialer_toast (An error occurred with %s. Switching to system dialer app.). This matches the user warning and missing fallback loop. However, it does not establish why the initial Google UI/service failed. Relevant initial main-buffer application logs are missing in the old post-hoc archive; events entries remain.
+
+Do not disable the watchdog, rewrite system dialer resources or patch Google APK based solely on this fallback symptom. Read effective resources and capture the next user-placed incoming call continuously. collect.py runs for60s, does not place a call, stop apps, alter permissions or clear logs. User should lock screen and use another normal phone to call after recording starts. Sensitive notification/call data may be present in diagnostic files: keep archives local/private, never commit them.
+
+Camera work is paused; V43 remains a development baseline with a confirmed incoming-call UI blocker, not a generally stable daily-use release.
