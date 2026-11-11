@@ -1,0 +1,104 @@
+.class public final Lcom/ginkgo/signalprobe/Main;
+.super Ljava/lang/Object;
+
+.method private static check(Landroid/telephony/SignalStrength;IILjava/lang/String;)V
+    .registers 9
+    const-class v0, Landroid/telephony/CellSignalStrengthLte;
+    invoke-virtual {p0, v0}, Landroid/telephony/SignalStrength;->getCellSignalStrengths(Ljava/lang/Class;)Ljava/util/List;
+    move-result-object v0
+    const/4 v1, 0x0
+    invoke-interface {v0, v1}, Ljava/util/List;->get(I)Ljava/lang/Object;
+    move-result-object v0
+    check-cast v0, Landroid/telephony/CellSignalStrengthLte;
+    invoke-virtual {v0}, Landroid/telephony/CellSignalStrengthLte;->getRsrp()I
+    move-result v2
+    if-ne v2, p1, :failed
+    const-class v0, Landroid/telephony/CellSignalStrengthTdscdma;
+    invoke-virtual {p0, v0}, Landroid/telephony/SignalStrength;->getCellSignalStrengths(Ljava/lang/Class;)Ljava/util/List;
+    move-result-object v0
+    invoke-interface {v0, v1}, Ljava/util/List;->get(I)Ljava/lang/Object;
+    move-result-object v0
+    check-cast v0, Landroid/telephony/CellSignalStrengthTdscdma;
+    invoke-virtual {v0}, Landroid/telephony/CellSignalStrengthTdscdma;->getRscp()I
+    move-result v2
+    if-ne v2, p2, :failed
+    sget-object v0, Ljava/lang/System;->out:Ljava/io/PrintStream;
+    invoke-virtual {v0, p3}, Ljava/io/PrintStream;->println(Ljava/lang/String;)V
+    return-void
+    :failed
+    new-instance v0, Ljava/lang/AssertionError;
+    invoke-direct {v0, p3}, Ljava/lang/AssertionError;-><init>(Ljava/lang/Object;)V
+    throw v0
+.end method
+
+.method public static main([Ljava/lang/String;)V
+    .registers 8
+    # Construct an old HAL 1.2 payload. LTE RSRP=-86 dBm, TD-SCDMA RSCP=-70 dBm.
+    new-instance v0, Landroid/hardware/radio/V1_2/SignalStrength;
+    invoke-direct {v0}, Landroid/hardware/radio/V1_2/SignalStrength;-><init>()V
+    iget-object v1, v0, Landroid/hardware/radio/V1_2/SignalStrength;->lte:Landroid/hardware/radio/V1_0/LteSignalStrength;
+    const/16 v2, 86
+    iput v2, v1, Landroid/hardware/radio/V1_0/LteSignalStrength;->rsrp:I
+    const/16 v2, 25
+    iput v2, v1, Landroid/hardware/radio/V1_0/LteSignalStrength;->signalStrength:I
+    const/16 v2, 10
+    iput v2, v1, Landroid/hardware/radio/V1_0/LteSignalStrength;->rsrq:I
+    iget-object v1, v0, Landroid/hardware/radio/V1_2/SignalStrength;->tdScdma:Landroid/hardware/radio/V1_0/TdScdmaSignalStrength;
+    const/16 v2, 70
+    iput v2, v1, Landroid/hardware/radio/V1_0/TdScdmaSignalStrength;->rscp:I
+
+    # Negative control must fail on the exact field name, and is caught locally.
+    :try_start
+    invoke-static {v0}, Lcom/ginkgo/signalprobe/V39Converters;->convertHalSignalStrength(Ljava/lang/Object;)Landroid/telephony/SignalStrength;
+    move-result-object v3
+    :try_end
+    new-instance v1, Ljava/lang/AssertionError;
+    const-string v2, "V39 negative control unexpectedly passed"
+    invoke-direct {v1, v2}, Ljava/lang/AssertionError;-><init>(Ljava/lang/Object;)V
+    throw v1
+    .catch Ljava/lang/NoSuchFieldError; {:try_start .. :try_end} :expected_error
+    :expected_error
+    move-exception v1
+    invoke-virtual {v1}, Ljava/lang/Throwable;->getMessage()Ljava/lang/String;
+    move-result-object v3
+    const-string v4, "tdScdma"
+    invoke-virtual {v3, v4}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
+    move-result v4
+    if-nez v4, :negative_ok
+    throw v1
+    :negative_ok
+    sget-object v6, Ljava/lang/System;->out:Ljava/io/PrintStream;
+    const-string v5, "V39_NEGATIVE_CONTROL_OK: tdScdma field error reproduced and caught"
+    invoke-virtual {v6, v5}, Ljava/io/PrintStream;->println(Ljava/lang/String;)V
+
+    invoke-static {v0}, Lcom/ginkgo/signalprobe/V40Converters;->convertHalSignalStrength(Ljava/lang/Object;)Landroid/telephony/SignalStrength;
+    move-result-object v3
+    const/16 v4, -86
+    const/16 v5, -70
+    const-string v6, "V40_V1_2_OK: LTE RSRP=-86, TD RSCP=-70"
+    invoke-static {v3, v4, v5, v6}, Lcom/ginkgo/signalprobe/Main;->check(Landroid/telephony/SignalStrength;IILjava/lang/String;)V
+
+    # A second payload exercises the HAL 1.0 branch with different measurements.
+    new-instance v0, Landroid/hardware/radio/V1_0/SignalStrength;
+    invoke-direct {v0}, Landroid/hardware/radio/V1_0/SignalStrength;-><init>()V
+    iget-object v1, v0, Landroid/hardware/radio/V1_0/SignalStrength;->lte:Landroid/hardware/radio/V1_0/LteSignalStrength;
+    const/16 v2, 93
+    iput v2, v1, Landroid/hardware/radio/V1_0/LteSignalStrength;->rsrp:I
+    const/16 v2, 20
+    iput v2, v1, Landroid/hardware/radio/V1_0/LteSignalStrength;->signalStrength:I
+    const/16 v2, 12
+    iput v2, v1, Landroid/hardware/radio/V1_0/LteSignalStrength;->rsrq:I
+    iget-object v1, v0, Landroid/hardware/radio/V1_0/SignalStrength;->tdScdma:Landroid/hardware/radio/V1_0/TdScdmaSignalStrength;
+    const/16 v2, 75
+    iput v2, v1, Landroid/hardware/radio/V1_0/TdScdmaSignalStrength;->rscp:I
+    invoke-static {v0}, Lcom/ginkgo/signalprobe/V40Converters;->convertHalSignalStrength(Ljava/lang/Object;)Landroid/telephony/SignalStrength;
+    move-result-object v3
+    const/16 v4, -93
+    const/16 v5, -75
+    const-string v6, "V40_V1_0_OK: LTE RSRP=-93, TD RSCP=-75"
+    invoke-static {v3, v4, v5, v6}, Lcom/ginkgo/signalprobe/Main;->check(Landroid/telephony/SignalStrength;IILjava/lang/String;)V
+    sget-object v0, Ljava/lang/System;->out:Ljava/io/PrintStream;
+    const-string v1, "PROBE_ALL_OK"
+    invoke-virtual {v0, v1}, Ljava/io/PrintStream;->println(Ljava/lang/String;)V
+    return-void
+.end method
