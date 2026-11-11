@@ -26,7 +26,7 @@ def main():
         r=subprocess.run(['java','-cp',a.classpath,main,*map(str,args)],stdin=subprocess.DEVNULL,capture_output=True,text=True,timeout=120)
         if r.returncode or 'Error' in r.stderr or 'Exception' in r.stderr:raise RuntimeError(r.stderr or r.stdout)
     expected_methods={}
-    report={'status':'ISOLATED_PROBE_BUILT_NOT_RUN','inputs':{},'purpose':'Synthetic HAL payload conversion only; no modem/system replacement'}
+    report={'status':'ISOLATED_PROBE_BUILT_NOT_RUN','probe_revision':2,'inputs':{},'purpose':'Synthetic HAL payload conversion only; no modem/system replacement'}
     for version,p,h in inputs:
         with zipfile.ZipFile(p) as z:dex=z.read('classes.dex')
         stripped,_=strip_hidden(dex);dexpath=out/('v'+version+'-analysis.dex');dexpath.write_bytes(stripped)
